@@ -86,6 +86,8 @@ public class CommonConfig implements Serializable {
     private String table;
     private boolean caseSensitive;
 
+    private Config pluginConfig;
+
     public CommonConfig(Config pluginConfig) {
         String catalogType = checkArgumentNotNull(pluginConfig.getString(KEY_CATALOG_TYPE.key()));
         checkArgument(HADOOP.getType().equals(catalogType)
@@ -104,6 +106,8 @@ public class CommonConfig implements Serializable {
         if (pluginConfig.hasPath(KEY_CASE_SENSITIVE.key())) {
             this.caseSensitive = pluginConfig.getBoolean(KEY_CASE_SENSITIVE.key());
         }
+
+        this.pluginConfig = pluginConfig;
     }
 
     protected <T> T checkArgumentNotNull(T argument) {

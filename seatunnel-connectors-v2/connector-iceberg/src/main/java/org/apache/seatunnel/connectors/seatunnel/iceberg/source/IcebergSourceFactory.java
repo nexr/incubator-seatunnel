@@ -36,6 +36,7 @@ import static org.apache.seatunnel.connectors.seatunnel.iceberg.config.SourceCon
 import org.apache.seatunnel.api.configuration.util.OptionRule;
 import org.apache.seatunnel.api.table.factory.Factory;
 import org.apache.seatunnel.api.table.factory.TableSourceFactory;
+import org.apache.seatunnel.connectors.seatunnel.iceberg.config.S3Config;
 
 import com.google.auto.service.AutoService;
 
@@ -68,6 +69,8 @@ public class IcebergSourceFactory implements TableSourceFactory {
                 KEY_USE_SNAPSHOT_TIMESTAMP,
                 KEY_STREAM_SCAN_STRATEGY
             )
+            .optional(S3Config.S3_PROPERTIES)
+            .optional(S3Config.S3_BUCKET)
             .build();
     }
 }

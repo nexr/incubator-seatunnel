@@ -20,6 +20,7 @@ package org.apache.seatunnel.connectors.seatunnel.iceberg;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import org.apache.seatunnel.connectors.seatunnel.iceberg.config.SourceConfig;
+import org.apache.seatunnel.connectors.seatunnel.iceberg.config.S3Conf;
 
 import lombok.NonNull;
 import org.apache.iceberg.CachingCatalog;
@@ -70,7 +71,8 @@ public class IcebergTableLoader implements Closeable, Serializable {
             sourceConfig.getCatalogName(),
             sourceConfig.getCatalogType(),
             sourceConfig.getWarehouse(),
-            sourceConfig.getUri());
+            sourceConfig.getUri(),
+            S3Conf.buildWithConfig(sourceConfig.getPluginConfig()));
         return new IcebergTableLoader(catalogFactory,
             TableIdentifier.of(Namespace.of(sourceConfig.getNamespace()), sourceConfig.getTable()));
     }
