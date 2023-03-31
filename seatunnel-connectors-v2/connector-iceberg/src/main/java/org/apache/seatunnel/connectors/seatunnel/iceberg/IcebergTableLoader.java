@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.connectors.seatunnel.iceberg;
 
+import org.apache.seatunnel.connectors.seatunnel.iceberg.config.S3Conf;
 import org.apache.seatunnel.connectors.seatunnel.iceberg.config.SourceConfig;
 
 import org.apache.iceberg.CachingCatalog;
@@ -73,7 +74,8 @@ public class IcebergTableLoader implements Closeable, Serializable {
                         sourceConfig.getCatalogName(),
                         sourceConfig.getCatalogType(),
                         sourceConfig.getWarehouse(),
-                        sourceConfig.getUri());
+                        sourceConfig.getUri(),
+                        S3Conf.buildWithConfig(sourceConfig.getPluginConfig()));
         return new IcebergTableLoader(
                 catalogFactory,
                 TableIdentifier.of(

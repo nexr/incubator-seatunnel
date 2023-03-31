@@ -20,6 +20,7 @@ package org.apache.seatunnel.connectors.seatunnel.iceberg;
 import org.apache.seatunnel.common.exception.CommonErrorCode;
 import org.apache.seatunnel.connectors.seatunnel.iceberg.config.IcebergCatalogType;
 import org.apache.seatunnel.connectors.seatunnel.iceberg.exception.IcebergConnectorException;
+import org.apache.seatunnel.connectors.seatunnel.iceberg.config.HadoopConf;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogProperties;
@@ -44,6 +45,8 @@ public class IcebergCatalogFactory implements Serializable {
     private final String warehouse;
     private final String uri;
 
+    private HadoopConf hadoopConf;
+
     public IcebergCatalogFactory(
             @NonNull String catalogName,
             @NonNull IcebergCatalogType catalogType,
@@ -55,8 +58,27 @@ public class IcebergCatalogFactory implements Serializable {
         this.uri = uri;
     }
 
+    public IcebergCatalogFactory(
+            @NonNull String catalogName,
+            @NonNull IcebergCatalogType catalogType,
+            @NonNull String warehouse,
+            String uri,
+            HadoopConf hadoopConf) {
+        this.catalogName = catalogName;
+        this.catalogType = catalogType;
+        this.warehouse = warehouse;
+        this.uri = uri;
+        this.hadoopConf = hadoopConf;
+    }
+
     public Catalog create() {
         Configuration conf = new Configuration();
+
+        if (hadoopConf != null) {
+            Map<String, String> extraOptions = hadoopConf.getExtraOptions();
+            extraOptions.forEach((key, value) -> conf.set(key, value));
+        }
+
         SerializableConfiguration serializableConf = new SerializableConfiguration(conf);
         Map<String, String> properties = new HashMap<>();
         properties.put(CatalogProperties.WAREHOUSE_LOCATION, warehouse);
