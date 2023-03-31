@@ -104,7 +104,7 @@ public abstract class AbstractSplitEnumerator
     private void addPendingSplits(Collection<IcebergFileScanTaskSplit> newSplits) {
         int numReaders = context.currentParallelism();
         for (IcebergFileScanTaskSplit newSplit : newSplits) {
-            int ownerReader = newSplit.splitId().hashCode() % numReaders;
+            int ownerReader = Math.abs(newSplit.splitId().hashCode()) % numReaders;
             pendingSplits.computeIfAbsent(ownerReader, r -> new ArrayList<>()).add(newSplit);
             log.info("Assigning {} to {} reader.", newSplit, ownerReader);
         }
