@@ -160,6 +160,7 @@ public class ZetaSQLFunction {
     public static final String COALESCE = "COALESCE";
     public static final String IFNULL = "IFNULL";
     public static final String NULLIF = "NULLIF";
+    public static final String UUID = "UUID";
 
     private final SeaTunnelRowType inputRowType;
     private final ZetaSQLType zetaSQLType;
@@ -406,6 +407,8 @@ public class ZetaSQLFunction {
                 return SystemFunction.ifnull(args);
             case NULLIF:
                 return SystemFunction.nullif(args);
+            case UUID:
+                return SystemFunction.uuid();
             default:
                 for (ZetaUDF udf : udfList) {
                     if (udf.functionName().equalsIgnoreCase(functionName)) {
