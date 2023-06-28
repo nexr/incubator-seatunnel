@@ -26,6 +26,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.UUID;
 
 public class SystemFunction {
     public static Object coalesce(List<Object> args) {
@@ -121,5 +122,10 @@ public class SystemFunction {
         throw new TransformException(
                 CommonErrorCode.UNSUPPORTED_OPERATION,
                 String.format("Unsupported CAST AS type: %s", v2));
+    }
+
+    public static String uuid() {
+        UUID uuid = UUID.randomUUID();
+        return uuid.toString();
     }
 }
