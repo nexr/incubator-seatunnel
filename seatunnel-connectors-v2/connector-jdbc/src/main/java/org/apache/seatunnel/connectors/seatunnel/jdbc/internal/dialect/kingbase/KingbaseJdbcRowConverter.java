@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.psql;
+package org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.kingbase;
 
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
@@ -26,43 +26,35 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.converter.Abstrac
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseIdentifier;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.utils.JdbcUtils;
 
+import java.math.BigDecimal;
 import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.Locale;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Optional;
 
-public class PostgresJdbcRowConverter extends AbstractJdbcRowConverter {
-
-    private static final String PG_GEOMETRY = "GEOMETRY";
-    private static final String PG_GEOGRAPHY = "GEOGRAPHY";
+public class KingbaseJdbcRowConverter extends AbstractJdbcRowConverter {
 
     @Override
     public String converterName() {
-        return DatabaseIdentifier.POSTGRESQL;
+        return DatabaseIdentifier.KINGBASE;
     }
 
     @Override
+    @SuppressWarnings("checkstyle:Indentation")
     public SeaTunnelRow toInternal(ResultSet rs, SeaTunnelRowType typeInfo) throws SQLException {
         Object[] fields = new Object[typeInfo.getTotalFields()];
         for (int fieldIndex = 0; fieldIndex < typeInfo.getTotalFields(); fieldIndex++) {
             SeaTunnelDataType<?> seaTunnelDataType = typeInfo.getFieldType(fieldIndex);
             int resultSetIndex = fieldIndex + 1;
-            String metaDataColumnType =
-                    rs.getMetaData().getColumnTypeName(resultSetIndex).toUpperCase(Locale.ROOT);
             switch (seaTunnelDataType.getSqlType()) {
                 case STRING:
-                    if (metaDataColumnType.equals(PG_GEOMETRY)
-                            || metaDataColumnType.equals(PG_GEOGRAPHY)) {
-                        fields[fieldIndex] =
-                                rs.getObject(resultSetIndex) == null
-                                        ? null
-                                        : rs.getObject(resultSetIndex).toString();
-                    } else {
-                        fields[fieldIndex] = JdbcUtils.getString(rs, resultSetIndex);
-                    }
+                    fields[fieldIndex] = JdbcUtils.getString(rs, resultSetIndex);
                     break;
                 case BOOLEAN:
                     fields[fieldIndex] = JdbcUtils.getBoolean(rs, resultSetIndex);
@@ -91,18 +83,18 @@ public class PostgresJdbcRowConverter extends AbstractJdbcRowConverter {
                 case DATE:
                     Date sqlDate = JdbcUtils.getDate(rs, resultSetIndex);
                     fields[fieldIndex] =
-                            Optional.ofNullable(sqlDate).map(e -> e.toLocalDate()).orElse(null);
+                            Optional.ofNullable(sqlDate).map(Date::toLocalDate).orElse(null);
                     break;
                 case TIME:
                     Time sqlTime = JdbcUtils.getTime(rs, resultSetIndex);
                     fields[fieldIndex] =
-                            Optional.ofNullable(sqlTime).map(e -> e.toLocalTime()).orElse(null);
+                            Optional.ofNullable(sqlTime).map(Time::toLocalTime).orElse(null);
                     break;
                 case TIMESTAMP:
                     Timestamp sqlTimestamp = JdbcUtils.getTimestamp(rs, resultSetIndex);
                     fields[fieldIndex] =
                             Optional.ofNullable(sqlTimestamp)
-                                    .map(e -> e.toLocalDateTime())
+                                    .map(Timestamp::toLocalDateTime)
                                     .orElse(null);
                     break;
                 case BYTES:
@@ -111,9 +103,9 @@ public class PostgresJdbcRowConverter extends AbstractJdbcRowConverter {
                 case NULL:
                     fields[fieldIndex] = null;
                     break;
+                case ROW:
                 case MAP:
                 case ARRAY:
-                case ROW:
                 default:
                     throw new JdbcConnectorException(
                             CommonErrorCode.UNSUPPORTED_DATA_TYPE,
@@ -121,5 +113,77 @@ public class PostgresJdbcRowConverter extends AbstractJdbcRowConverter {
             }
         }
         return new SeaTunnelRow(fields);
+    }
+
+    @Override
+    public PreparedStatement toExternal(
+            SeaTunnelRowType rowType, SeaTunnelRow row, PreparedStatement statement)
+            throws SQLException {
+        for (int fieldIndex = 0; fieldIndex < rowType.getTotalFields(); fieldIndex++) {
+            SeaTunnelDataType<?> seaTunnelDataType = rowType.getFieldType(fieldIndex);
+            int statementIndex = fieldIndex + 1;
+            Object fieldValue = row.getField(fieldIndex);
+            if (fieldValue == null) {
+                statement.setObject(statementIndex, null);
+                continue;
+            }
+
+            switch (seaTunnelDataType.getSqlType()) {
+                case STRING:
+                    statement.setString(statementIndex, (String) row.getField(fieldIndex));
+                    break;
+                case BOOLEAN:
+                    statement.setBoolean(statementIndex, (Boolean) row.getField(fieldIndex));
+                    break;
+                case TINYINT:
+                    statement.setByte(statementIndex, (Byte) row.getField(fieldIndex));
+                    break;
+                case SMALLINT:
+                    statement.setShort(statementIndex, (Short) row.getField(fieldIndex));
+                    break;
+                case INT:
+                    statement.setInt(statementIndex, (Integer) row.getField(fieldIndex));
+                    break;
+                case BIGINT:
+                    statement.setLong(statementIndex, (Long) row.getField(fieldIndex));
+                    break;
+                case FLOAT:
+                    statement.setFloat(statementIndex, (Float) row.getField(fieldIndex));
+                    break;
+                case DOUBLE:
+                    statement.setDouble(statementIndex, (Double) row.getField(fieldIndex));
+                    break;
+                case DECIMAL:
+                    statement.setBigDecimal(statementIndex, (BigDecimal) row.getField(fieldIndex));
+                    break;
+                case DATE:
+                    LocalDate localDate = (LocalDate) row.getField(fieldIndex);
+                    statement.setDate(statementIndex, java.sql.Date.valueOf(localDate));
+                    break;
+                case TIME:
+                    LocalTime localTime = (LocalTime) row.getField(fieldIndex);
+                    statement.setTime(statementIndex, java.sql.Time.valueOf(localTime));
+                    break;
+                case TIMESTAMP:
+                    LocalDateTime localDateTime = (LocalDateTime) row.getField(fieldIndex);
+                    statement.setTimestamp(
+                            statementIndex, java.sql.Timestamp.valueOf(localDateTime));
+                    break;
+                case BYTES:
+                    statement.setBytes(statementIndex, (byte[]) row.getField(fieldIndex));
+                    break;
+                case NULL:
+                    statement.setNull(statementIndex, java.sql.Types.NULL);
+                    break;
+                case ROW:
+                case MAP:
+                case ARRAY:
+                default:
+                    throw new JdbcConnectorException(
+                            CommonErrorCode.UNSUPPORTED_DATA_TYPE,
+                            "Unexpected value: " + seaTunnelDataType);
+            }
+        }
+        return statement;
     }
 }
