@@ -21,8 +21,13 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
 import lombok.Data;
+import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorErrorCode;
+import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorException;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,6 +38,7 @@ public class HadoopConf implements Serializable {
     protected Map<String, String> extraOptions = new HashMap<>();
     protected String hdfsNameKey;
     protected String hdfsSitePath;
+    protected String hdfsSiteXmlProperties;
     protected String kerberosPrincipal;
     protected String kerberosKeytabPath;
 
@@ -54,6 +60,14 @@ public class HadoopConf implements Serializable {
         }
         if (hdfsSitePath != null) {
             configuration.addResource(new Path(hdfsSitePath));
+        }
+        if (hdfsSiteXmlProperties != null) {
+            try (ByteArrayInputStream inputStream =
+                         new ByteArrayInputStream(hdfsSiteXmlProperties.getBytes(StandardCharsets.UTF_8))) {
+                configuration.addResource(inputStream);
+            } catch (IOException e) {
+                throw new FileConnectorException(FileConnectorErrorCode.DATA_DESERIALIZE_FAILED, e.getMessage());
+            }
         }
     }
 }

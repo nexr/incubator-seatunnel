@@ -77,6 +77,12 @@ public class BaseSourceConfig {
                     .noDefaultValue()
                     .withDescription("The path of hdfs-site.xml");
 
+    public static final Option<String> HDFS_SITE_XML_PROPERTIES =
+            Options.key("hdfs_site_xml_properties")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription("Full content of hdfs-site.xml; can be used instead of path");
+
     public static final Option<String> KERBEROS_PRINCIPAL =
             Options.key("kerberos_principal")
                     .stringType()
