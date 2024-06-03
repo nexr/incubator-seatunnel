@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.seatunnel</groupId>
         <artifactId>seatunnel-engine-storage</artifactId>
-        <version>2.3.5</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>imap-storage-plugins</artifactId>
